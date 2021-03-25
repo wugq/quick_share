@@ -19,3 +19,14 @@ class HttpServerStarted extends HttpServerInitial {
 }
 
 class HttpServerStopped extends HttpServerInitial {}
+
+class HttpServerIpListFound extends HttpServerInitial {
+  final List<InternetAddress> ipList;
+
+  HttpServerIpListFound({this.ipList});
+
+  @override
+  List<Object> get props => [ipList];
+}
+
+class HttpServerIpSelected extends HttpServerInitial {}

@@ -5,8 +5,6 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:filesystem_picker/filesystem_picker.dart';
 import 'package:quick_share/src/bloc/http_server/http_server_bloc.dart';
 import 'package:quick_share/src/bloc/http_server_bloc_controller.dart';
-import 'package:device_info_plus/device_info_plus.dart';
-
 
 class MyHomePage extends StatefulWidget {
   MyHomePage({Key key, this.title}) : super(key: key);
@@ -17,16 +15,37 @@ class MyHomePage extends StatefulWidget {
   _MyHomePageState createState() => _MyHomePageState();
 }
 
+List<DropdownMenuItem<String>> buildAndGetDropDownMenuItems(
+    List<InternetAddress> ipList) {
+  List<DropdownMenuItem<String>> items = [];
+  for (InternetAddress ipAddress in ipList) {
+    items.add(DropdownMenuItem(
+        value: ipAddress.address, child: Text(ipAddress.address)));
+  }
+  return items;
+}
+
 class _MyHomePageState extends State<MyHomePage> {
   HttpServerBloc _httpServerBloc;
   String _url;
 
-  // MyHttpServer _myHttpServer = MyHttpServer();
+  List<InternetAddress> _ipList;
+  bool _ipv4Only = true;
+  String _selectedIp;
+  List<DropdownMenuItem<String>> _dropDownMenuIpList = [];
+
+  void changedDropDownIpAddress(String selectedIp) {
+    setState(() {
+      _selectedIp = selectedIp;
+    });
+    _httpServerBloc.add(HttpServerSelectIp(ipAddress: selectedIp));
+  }
 
   @override
   void initState() {
     _httpServerBloc = HttpServerBlocController().httpServerBloc;
     _url = "";
+    _httpServerBloc.add(HttpServerFindIpList());
     super.initState();
   }
 
@@ -56,6 +75,13 @@ class _MyHomePageState extends State<MyHomePage> {
           setState(() {
             _url = state.url;
           });
+        } else if (state is HttpServerIpListFound) {
+          List<DropdownMenuItem<String>> ipSelectList =
+              buildAndGetDropDownMenuItems(state.ipList);
+          setState(() {
+            _ipList = state.ipList;
+            _dropDownMenuIpList = ipSelectList;
+          });
         }
       },
       child: BlocBuilder<HttpServerBloc, HttpServerState>(
@@ -69,6 +95,11 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
+                  DropdownButton(
+                    value: _selectedIp,
+                    items: _dropDownMenuIpList,
+                    onChanged: changedDropDownIpAddress,
+                  ),
                   Text(
                     '$_url',
                     style: Theme.of(context).textTheme.headline4,
@@ -84,19 +115,15 @@ class _MyHomePageState extends State<MyHomePage> {
             floatingActionButton: state is HttpServerStarted
                 ? FloatingActionButton(
                     onPressed: () async {
-                      // DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-                      // AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
-                      _httpServerBloc.add(StopServer());
+                      _httpServerBloc.add(HttpServerStop());
                     },
                     tooltip: 'Stop',
                     child: Icon(Icons.stop),
                   )
                 : FloatingActionButton(
                     onPressed: () async {
-                      // DeviceInfoPlugin deviceInfo = DeviceInfoPlugin();
-                      // AndroidDeviceInfo androidInfo = await deviceInfo.androidInfo;
                       String filePath = await _selectFileToShare(context);
-                      _httpServerBloc.add(StartServer(filePath: filePath));
+                      _httpServerBloc.add(HttpServerStart(filePath: filePath));
                     },
                     tooltip: 'Start',
                     child: Icon(Icons.add),

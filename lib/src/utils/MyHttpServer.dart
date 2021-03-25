@@ -8,6 +8,8 @@ class MyHttpServer {
   Handler _handler;
   String _filePath;
   bool _isConnected = false;
+  List<InternetAddress> ipList;
+  String selectedIp = "localhost";
 
   bool isFile(filePath) {
     FileSystemEntityType fileSystemEntityType =
@@ -31,10 +33,7 @@ class MyHttpServer {
   }
 
   Future<HttpServer> startServer() async {
-    List interfaces = await NetworkInterface.list(
-        includeLoopback: true, includeLinkLocal: true);
-
-    _httpServer = await io.serve(_handler, 'localhost', 8080);
+    _httpServer = await io.serve(_handler, selectedIp, 8080);
     _isConnected = true;
     return _httpServer;
   }
@@ -44,10 +43,6 @@ class MyHttpServer {
     _isConnected = false;
     return;
   }
-
-  // getIpAddress () {
-  //   NetworkInterface networkInterface = NetworkInterface();
-  // }
 
   getConnectionInfo() {
     return _httpServer.connectionsInfo();

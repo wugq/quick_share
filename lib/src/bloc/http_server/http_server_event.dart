@@ -6,12 +6,22 @@ abstract class HttpServerEvent extends Equatable {
   List<Object> get props => [];
 }
 
-class StartServer extends HttpServerEvent {
+class HttpServerStart extends HttpServerEvent {
   final String filePath;
 
-  StartServer({@required this.filePath});
+  HttpServerStart({@required this.filePath});
 
   List<Object> get props => [filePath];
 }
 
-class StopServer extends HttpServerEvent {}
+class HttpServerStop extends HttpServerEvent {}
+
+class HttpServerFindIpList extends HttpServerEvent {}
+
+class HttpServerSelectIp extends HttpServerEvent {
+  final String ipAddress;
+
+  HttpServerSelectIp({@required this.ipAddress});
+
+  List<Object> get props => [ipAddress];
+}
